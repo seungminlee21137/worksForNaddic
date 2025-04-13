@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">WORKS X NADDIC</string>
+    <string name="action_settings">App 종료</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label" translatable="false">안녕하세요 :)</string>
+    <string name="second_fragment_label">WORKS Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="lorem_ipsum">
+        ..... LOGIN .....
+    </string>
+</resources>
