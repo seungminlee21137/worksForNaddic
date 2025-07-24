@@ -24,6 +24,19 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+/*
+$('.commute-button-box.row').children('button:eq(0)').css('height','106px;');
+$('.commute-button-box.row').children('button:eq(0)').css('position','absolute');
+$('.commute-button-box.row').children('button:eq(0)').css('top','-144px');
+$('.commute-button-box.row').children('button:eq(0)').css('left','-21px');
+$('.commute-button-box.row').children('button:eq(0)').css('z-index','9999');
+
+$('.commute-button-box.row').children('button:eq(1)').css('height','106px ');
+$('.commute-button-box.row').children('button:eq(1)').css('position','absolute');
+$('.commute-button-box.row').children('button:eq(1)').css('top','-144px');
+$('.commute-button-box.row').children('button:eq(1)').css('left','428px');
+$('.commute-button-box.row').children('button:eq(1)').css('z-index','9999');
+*/
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
@@ -34,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private WebSettings mWebSettings;
 
     private String targetURL = "https://auth.worksmobile.com/login/login?accessUrl=http%3A%2F%2Fnaddic.ncpworkplace.com%2Fv%2Fhome%2F";
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,22 +67,22 @@ public class MainActivity extends AppCompatActivity {
         mWebView = (WebView) findViewById(R.id.webView);
 
 
+
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "버튼-활성화", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "버튼-디버그모드", Snackbar.LENGTH_LONG)
                         .setAnchorView(R.id.fab)
                         .setAction("Action", null).show();
 
-
-                mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
-
+//                mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+                mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36");
                 //mWebView.loadUrl("javascript:$('head')[0].remove();");
-                mWebView.loadUrl("javascript:$('script').remove();");
+//                mWebView.loadUrl("javascript:$('script').remove();");
                 // works css addon
                 //mWebView.loadUrl("javascript:document.getElementsByTagName('head')[0].insertAdjacentHTML('beforeend','<link href=\"https://ss.ncpworkplace.com/uikit/dist/css/app.min.css?20250410-1\" rel=\"stylesheet\" >');");
 
-                mWebView.loadUrl("javascript:$('.btn').attr('disabled', false);");
+//                mWebView.loadUrl("javascript:$('.btn').attr('disabled', false);");
                 // bootstrap 5.0
 //                mWebView.loadUrl("javascript:document.getElementsByTagName('head')[0].insertAdjacentHTML('beforeend','<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65\" crossorigin=\"anonymous\">');");
 //                mWebView.loadUrl("javascript:document.getElementsByTagName('head')[0].insertAdjacentHTML('beforeend','<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4\" crossorigin=\"anonymous\"></script>');");
@@ -83,33 +98,56 @@ public class MainActivity extends AppCompatActivity {
 //                mWebView.loadUrl("javascript:$('.header-bottom-right').css('display','none');");
 //                mWebView.loadUrl("javascript:$('.wp-footer').css('display','none');");
 //                mWebView.loadUrl("javascript:$('.contents-bottom-btn-area').css('display','none');");
-
                 // 조직도 삭제:remove target class
 //                mWebView.loadUrl("javascript:$('.personal-info-box').css('display','none');");
-
-                mWebView.loadUrl("javascript:$('.commute-button-box.row').children(0).addClass('btn-success');");
-                mWebView.loadUrl("javascript:$('.commute-button-box.row').children(1).addClass('btn-danger');");
+//                mWebView.loadUrl("javascript:$('.commute-button-box.row').children(0).addClass('btn-success');");
+//                mWebView.loadUrl("javascript:$('.commute-button-box.row').children(1).addClass('btn-danger');");
 //                mWebView.loadUrl("javascript:$('#popup_commute').css('display','block');");
 //                mWebView.loadUrl("javascript:$('#popup_commute').attr('aria-hidden', '');");
 //                mWebView.loadUrl("javascript:$('#popup_commute').removeClass('modal');");
 //                mWebView.loadUrl("javascript:$('#popup_commute').children(0).removeClass('modal-dialog');");
 //                mWebView.reload();
 
-
+                // New-code for javascript....
+//                mWebView.loadUrl("javascript:document.getElementsByClassName('widget_fixed_col')[0].style.display = 'none';");
+//                mWebView.loadUrl("javascript:const itemsArray = Array.from(document.getElementsByClassName('widget_cover muuri-item'));");
+//                mWebView.loadUrl("javascript:itemsArray.forEach(item => { item.className.indexOf('attendance time_clock') == -1){ item.style.display = 'none'; } });");
+//                mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.top = '0';");
+//                mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.left = '0';");
+//                mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.maxWidth = '100%';");
+                // 혹시모르니 버튼으로도 리로드...
+                mWebView.loadUrl("javascript:$('.widget_fixed_col').hide();");
+                // $(".muuri-item").each(function() { console.log($(this).attr('class'))});
+                mWebView.loadUrl("javascript:$('.muuri-item').each(function() { if($(this).attr('class').indexOf('attendance time_clock') == -1) { $(this).hide() } });");
+                mWebView.loadUrl("javascript:$('.time_clock').css('maxWidth','100%');");
+                mWebView.loadUrl("javascript:$('.time_clock').css('left','0');");
+                mWebView.loadUrl("javascript:$('.time_clock').css('top','0');");
             }
         });
 
         String url = "https://auth.worksmobile.com/login/login?accessUrl=http%3A%2F%2Fnaddic.ncpworkplace.com%2Fv%2Fhome%2F";
 //        url = "https://getbootstrap.kr/docs/5.0/components/modal/";
 
-        mWebView.setWebViewClient(new WebViewClient()); // 클릭시 새창 안뜨게
-        mWebSettings = mWebView.getSettings();                          // 세부 세팅 등록
+        //mWebView.setWebViewClient(new WebViewClient()); // 클릭시 새창 안뜨게
+        mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.loadUrl("javascript: alert('Loading completed.');");
+                view.loadUrl("javascript:$('.widget_fixed_col').hide();");
+                view.loadUrl("javascript:$('.muuri-item').each(function() { if($(this).attr('class').indexOf('attendance time_clock') == -1) { $(this).hide() } });");
+                view.loadUrl("javascript:$('.time_clock').css('maxWidth','100%');");
+                view.loadUrl("javascript:$('.time_clock').css('left','0');");
+                view.loadUrl("javascript:$('.time_clock').css('top','0');");
+            }
+        });
 
+        mWebSettings = mWebView.getSettings();                          // 세부 세팅 등록
         mWebSettings.setJavaScriptEnabled(true);                        // 웹페이지 자바스크립트 허용 여부
 //        mWebSettings.setSupportMultipleWindows(true);                  // 새창 띄우기 허용 여부
 //        mWebSettings.setJavaScriptCanOpenWindowsAutomatically(true);   // 자바스크립트가 창을 자동으로 열 수 있게할지 여부
         mWebSettings.setSupportZoom(true);                              // 화면 줌 허용 여부
-        mWebSettings.setBuiltInZoomControls(true);                      // 줌컨트롤
+//        mWebSettings.setBuiltInZoomControls(true);                      // 줌컨트롤
         mWebSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING); // 컨텐츠 사이즈 맞추기, WebSettings.LayoutAlgorithm.SINGLE_COLUMN
         mWebSettings.setLoadWithOverviewMode(true);
         mWebSettings.setUseWideViewPort(true);
@@ -136,12 +174,27 @@ public class MainActivity extends AppCompatActivity {
         try {
             String ua = mWebView.getSettings().getUserAgentString();
             String androidOSString = mWebView.getSettings().getUserAgentString().substring(ua.indexOf("("), ua.indexOf(")") + 1);
-//            newUserAgent = mWebView.getSettings().getUserAgentString().replace(androidOSString, "(X11; Linux x86_64)");
-//            mWebView.getSettings().setUserAgentString(newUserAgent);
-            // 출석관련하여 user-agent 이슈가있으므로 아래설정으로 하드코딩
-            mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+//          newUserAgent = mWebView.getSettings().getUserAgentString().replace(androidOSString, "(X11; Linux x86_64)");
+//          mWebView.getSettings().setUserAgentString(newUserAgent);
+            // 출석관련하여 user-agent 이슈가있으므로 아래설정으로 하드코딩 (For web)
+            //mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+//            mWebView.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36");
+//            mWebView.reload();
 
-            mWebView.reload();
+            // New-code
+//            mWebView.loadUrl("javascript:document.getElementsByClassName('widget_fixed_col')[0].style.display = 'none';");
+//            mWebView.loadUrl("javascript:const itemsArray = Array.from(document.getElementsByClassName('widget_cover muuri-item'));");
+//            mWebView.loadUrl("javascript:itemsArray.forEach(item => { item.className.indexOf('attendance time_clock') == -1){ item.style.display = 'none'; } });");
+//            mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.top = '0';");
+//            mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.left = '0';");
+//            mWebView.loadUrl("javascript:document.getElementsByClassName('widget_cover muuri-item type_small')[0].style.maxWidth = '100%';");
+
+            mWebView.loadUrl("javascript:$('.widget_fixed_col').hide();");
+            // sample:: $(".muuri-item").each(function() { console.log($(this).attr('class'))});
+            mWebView.loadUrl("javascript:$('.muuri-item').each(function() { if($(this).attr('class').indexOf('attendance time_clock') == -1) { $(this).hide() } });");
+            mWebView.loadUrl("javascript:$('.time_clock').css('maxWidth','100%');");
+            mWebView.loadUrl("javascript:$('.time_clock').css('left','0');");
+            mWebView.loadUrl("javascript:$('.time_clock').css('top','0');");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     //webView 뒤로 가기 처리
     private long time = 0;
     private Toast toast;
+
 
     @Override
     public void onBackPressed() {
