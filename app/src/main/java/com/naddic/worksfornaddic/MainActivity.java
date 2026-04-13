@@ -117,16 +117,17 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
 
-                // URL에 따라 각각의 처리 메서드 호출 (가독성 최적화)
-                if (url.contains("login")) {
+                // 로그인 페이지 URL 판별 (전달해주신 두 URL 모두 포함됨)
+                if (url.contains("auth.worksmobile.com/login/login")) {
                     handleLoginPage(view);
-                } else if (url.contains("home.worksmobile.com")) {
+                }
+                else if (url.contains("home.worksmobile.com")) {
                     handleHomePage(view);
-                } else if (url.contains("workplace.worksmobile.com/my-space/")) {
+                }
+                else if (url.contains("workplace.worksmobile.com/my-space/")) {
                     handleMySpacePage(view);
                 }
 
-                // 모든 페이지에 공통으로 적용될 UI 정리 및 CSS 주입
                 applyGlobalStylesAndFixes(view);
             }
         });
@@ -140,35 +141,49 @@ public class MainActivity extends AppCompatActivity {
     // [최적화] URL별 기능 분리 메서드
     // =======================================================
 
+    // [강화된 로그인 처리 로직]
     private void handleLoginPage(WebView view) {
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         String savedId = prefs.getString(KEY_ID, "");
         String savedPw = prefs.getString(KEY_PW, "");
 
         if (!savedId.isEmpty() && !savedPw.isEmpty()) {
+            // 저장된 정보가 있으면 자동 입력 및 로그인 수행
             String autoLoginScript = "javascript:(function() {" +
-                    "var idField = document.querySelector('#login_param');" +
-                    "var pwField = document.querySelector('#password');" +
-                    "var loginBtn = document.querySelector('#loginBtn');" +
-                    "var keepCheck = document.querySelector('#keep');" +
-                    "if(idField && pwField) {" +
-                    "   idField.value = '" + savedId + "';" +
-                    "   pwField.value = '" + savedPw + "';" +
-                    "   if(keepCheck && !keepCheck.checked) { keepCheck.click(); }" +
-                    "   setTimeout(function() { if(loginBtn) loginBtn.click(); }, 500);" +
-                    "}" +
+                    "   var retryCount = 0;" +
+                    "   var maxRetries = 10;" + // 최대 5초간 시도 (500ms * 10)
+                    "   var autoLoginInterval = setInterval(function() {" +
+                    "       var idField = document.querySelector('#login_param') || document.querySelector('#userId');" +
+                    "       var pwField = document.querySelector('#password') || document.querySelector('#userPassword');" +
+                    "       var loginBtn = document.querySelector('#loginBtn') || document.querySelector('.btn_login');" +
+                    "       var keepCheck = document.querySelector('#keep');" +
+                    "       " +
+                    "       if(idField && pwField && loginBtn) {" +
+                    "           clearInterval(autoLoginInterval);" +
+                    "           idField.value = '" + savedId + "';" +
+                    "           pwField.value = '" + savedPw + "';" +
+                    "           if(keepCheck && !keepCheck.checked) { keepCheck.click(); }" + // 로그인 유지 체크
+                    "           " +
+                    "           setTimeout(function() {" +
+                    "               loginBtn.click();" +
+                    "           }, 500);" + // 입력 후 0.5초 뒤 클릭
+                    "       }" +
+                    "       " +
+                    "       if(++retryCount >= maxRetries) clearInterval(autoLoginInterval);" +
+                    "   }, 500);" +
                     "})();";
             view.loadUrl(autoLoginScript);
         } else {
+            // 저장된 정보가 없으면 사용자가 입력할 때 가로채서 저장
             String injectCaptureScript = "javascript:(function() {" +
-                    "var loginBtn = document.querySelector('#loginBtn');" +
-                    "if(loginBtn) {" +
-                    "   loginBtn.addEventListener('click', function() {" +
-                    "       var id = document.querySelector('#login_param').value;" +
-                    "       var pw = document.querySelector('#password').value;" +
-                    "       window.Android.saveCredentials(id, pw);" +
-                    "   });" +
-                    "}" +
+                    "   var loginBtn = document.querySelector('#loginBtn') || document.querySelector('.btn_login');" +
+                    "   if(loginBtn) {" +
+                    "       loginBtn.addEventListener('click', function() {" +
+                    "           var id = (document.querySelector('#login_param') || document.querySelector('#userId')).value;" +
+                    "           var pw = (document.querySelector('#password') || document.querySelector('#userPassword')).value;" +
+                    "           if(id && pw) window.Android.saveCredentials(id, pw);" +
+                    "       });" +
+                    "   }" +
                     "})();";
             view.loadUrl(injectCaptureScript);
         }
