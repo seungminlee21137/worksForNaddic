@@ -1,4 +1,4 @@
-package com.naddic.worksfornaddic;
+package com.naver.worksforApp;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.naddic.worksfornaddic", appContext.getPackageName());
+        assertEquals("com.naver.naverWorksAttend", appContext.getPackageName());
     }
 }

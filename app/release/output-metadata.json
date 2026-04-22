@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.naddic.worksfornaddic",
+  "applicationId": "com.naver.naverWorksAttend",
   "variantName": "release",
   "elements": [
     {

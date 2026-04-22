@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WORKS X NADDIC</string>
+    <string name="app_name">네이버웍스 출석</string>
     <string name="action_settings">로그아웃</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label" translatable="false"></string>

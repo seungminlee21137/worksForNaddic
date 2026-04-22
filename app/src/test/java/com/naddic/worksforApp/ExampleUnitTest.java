@@ -1,4 +1,4 @@
-package com.naddic.worksfornaddic;
+package com.naver.worksforApp;
 
 import org.junit.Test;
 

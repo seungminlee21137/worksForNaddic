@@ -1,8 +1,7 @@
-package com.naddic.worksfornaddic;
+package com.naver.worksforApp;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,9 +11,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -36,7 +35,7 @@ import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.naddic.worksfornaddic.databinding.ActivityMainBinding;
+import com.naver.worksforApp.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,15 +45,22 @@ public class MainActivity extends AppCompatActivity {
     private WebView mWebView;
     private WebSettings mWebSettings;
 
-    private String targetURL = "https://auth.worksmobile.com/login/login?accessUrl=http%3A%2F%2Fnaddic.ncpworkplace.com%2Fv%2Fhome%2F";
+    //https://home.worksmobile.com
+    private String targetURL = "https://auth.worksmobile.com/login/login?accessUrl=https%3A%2F%2Fhome.worksmobile.com%2F";
 
     private static final String PREF_NAME = "LoginPrefs";
     private static final String KEY_ID = "USER_ID";
     private static final String KEY_PW = "USER_PW";
 
+    private static final String KEY_EMAIL = "email";
+
     private long backPressedTime = 0;
     private int backPressCount = 0;
     private Toast toast;
+
+    private volatile String tempId = "";
+    private volatile String tempPw = "";
+    private volatile String tempEmail = "";
 
     // 1. 자바스크립트 인터페이스
     public class WebAppInterface {
@@ -62,6 +68,33 @@ public class MainActivity extends AppCompatActivity {
 
         WebAppInterface(Context c) {
             mContext = c;
+        }
+
+        @JavascriptInterface
+        public void tempSaveCredentials(String id, String pw) {
+            if (id != null && !id.isEmpty()) {
+                tempId = id;
+
+                if (!id.contains("@")) {
+                    tempEmail = id + "@naver.com";
+                } else {
+                    tempEmail = id;
+                }
+            }
+            if (pw != null && !pw.isEmpty()) {
+                tempPw = pw;
+            }
+        }
+
+        @JavascriptInterface
+        public void showDebugDialog(String id, String pw) {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                new AlertDialog.Builder(mContext)
+                        .setTitle("데이터 캡처 확인")
+                        .setMessage("ID: " + id + "\nPW: " + pw + "\n\n이 값이 맞나요?")
+                        .setPositiveButton("확인", null)
+                        .show();
+            });
         }
 
         @JavascriptInterface
@@ -111,6 +144,46 @@ public class MainActivity extends AppCompatActivity {
         mWebView = findViewById(R.id.webView);
         mWebView.addJavascriptInterface(new WebAppInterface(this), "Android");
 
+        binding.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String url = mWebView.getUrl();
+                SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                String savedId = prefs.getString(KEY_ID, "");
+                String savedPw = prefs.getString(KEY_PW, "");
+                String savedEmail = prefs.getString(KEY_EMAIL, "");
+
+                if (savedId.isEmpty() || savedPw.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "저장된 정보가 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean isStep2 = url != null && url.contains("loginParam=");
+                String manualScript;
+
+                if (!isStep2) {
+                    // 1단계 화면에서 누른 경우
+                    manualScript = "javascript:(function() {" +
+                            "   var idField = document.querySelector('#user_id');" +
+                            "   var startBtn = document.querySelector('#loginStart');" +
+                            "   if(idField) idField.value = '" + savedEmail + "';" +
+                            "   if(startBtn) startBtn.click();" +
+                            "})();";
+                } else {
+                    // 2단계 화면에서 누른 경우
+                    manualScript = "javascript:(function() {" +
+                            "   var idField = document.querySelector('#user_id');" +
+                            "   var pwField = document.querySelector('#user_pwd');" +
+                            "   var loginBtn = document.querySelector('#loginBtn');" +
+                            "   if(idField) idField.value = '" + savedId + "';" +
+                            "   if(pwField) pwField.value = '" + savedPw + "';" +
+                            "   if(loginBtn) loginBtn.click();" +
+                            "})();";
+                }
+                mWebView.loadUrl(manualScript);
+            }
+        });
+
         // 2. 웹뷰 클라이언트 설정
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -120,11 +193,9 @@ public class MainActivity extends AppCompatActivity {
                 // 로그인 페이지 URL 판별 (전달해주신 두 URL 모두 포함됨)
                 if (url.contains("auth.worksmobile.com/login/login")) {
                     handleLoginPage(view);
-                }
-                else if (url.contains("home.worksmobile.com")) {
+                } else if (url.contains("home.worksmobile.com")) {
                     handleHomePage(view);
-                }
-                else if (url.contains("workplace.worksmobile.com/my-space/")) {
+                } else if (url.contains("workplace.worksmobile.com/my-space/")) {
                     handleMySpacePage(view);
                 }
 
@@ -137,60 +208,69 @@ public class MainActivity extends AppCompatActivity {
         mWebView.loadUrl(targetURL);
     }
 
-    // =======================================================
-    // [최적화] URL별 기능 분리 메서드
-    // =======================================================
-
-    // [강화된 로그인 처리 로직]
     private void handleLoginPage(WebView view) {
+        String url = view.getUrl();
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String savedId = prefs.getString(KEY_ID, "");
+        String savedEmail = prefs.getString(KEY_EMAIL, ""); // 👈 이메일 불러오기
         String savedPw = prefs.getString(KEY_PW, "");
 
-        if (!savedId.isEmpty() && !savedPw.isEmpty()) {
-            // 저장된 정보가 있으면 자동 입력 및 로그인 수행
-            String autoLoginScript = "javascript:(function() {" +
-                    "   var retryCount = 0;" +
-                    "   var maxRetries = 10;" + // 최대 5초간 시도 (500ms * 10)
-                    "   var autoLoginInterval = setInterval(function() {" +
-                    "       var idField = document.querySelector('#login_param') || document.querySelector('#userId');" +
-                    "       var pwField = document.querySelector('#password') || document.querySelector('#userPassword');" +
-                    "       var loginBtn = document.querySelector('#loginBtn') || document.querySelector('.btn_login');" +
-                    "       var keepCheck = document.querySelector('#keep');" +
-                    "       " +
-                    "       if(idField && pwField && loginBtn) {" +
-                    "           clearInterval(autoLoginInterval);" +
-                    "           idField.value = '" + savedId + "';" +
-                    "           pwField.value = '" + savedPw + "';" +
-                    "           if(keepCheck && !keepCheck.checked) { keepCheck.click(); }" + // 로그인 유지 체크
-                    "           " +
-                    "           setTimeout(function() {" +
-                    "               loginBtn.click();" +
-                    "           }, 500);" + // 입력 후 0.5초 뒤 클릭
-                    "       }" +
-                    "       " +
-                    "       if(++retryCount >= maxRetries) clearInterval(autoLoginInterval);" +
-                    "   }, 500);" +
-                    "})();";
-            view.loadUrl(autoLoginScript);
+        boolean isStep2 = url != null && url.contains("loginParam=");
+
+        if (!savedEmail.isEmpty() && !savedPw.isEmpty()) {
+            // [자동 로그인 모드]
+            if (!isStep2) {
+                // 1단계: 저장된 '이메일' 형식을 넣고 로그인 클릭
+                view.loadUrl("javascript:(function() {" +
+                        "   var idField = document.querySelector('#user_id');" +
+                        "   var startBtn = document.querySelector('#loginStart');" +
+                        "   if(idField && startBtn) {" +
+                        "       idField.value = '" + savedEmail + "';" +
+                        "       setTimeout(function() { startBtn.click(); }, 500);" +
+                        "   }" +
+                        "})();");
+            } else {
+                // 2단계: 저장된 비밀번호 넣고 로그인 클릭
+                view.loadUrl("javascript:(function() {" +
+                        "   var pwField = document.querySelector('#user_pwd');" +
+                        "   var loginBtn = document.querySelector('#loginBtn');" +
+                        "   if(pwField && loginBtn) {" +
+                        "       pwField.value = '" + savedPw + "';" +
+                        "       setTimeout(function() { loginBtn.click(); }, 500);" +
+                        "   }" +
+                        "})();");
+            }
         } else {
-            // 저장된 정보가 없으면 사용자가 입력할 때 가로채서 저장
-            String injectCaptureScript = "javascript:(function() {" +
-                    "   var loginBtn = document.querySelector('#loginBtn') || document.querySelector('.btn_login');" +
-                    "   if(loginBtn) {" +
-                    "       loginBtn.addEventListener('click', function() {" +
-                    "           var id = (document.querySelector('#login_param') || document.querySelector('#userId')).value;" +
-                    "           var pw = (document.querySelector('#password') || document.querySelector('#userPassword')).value;" +
-                    "           if(id && pw) window.Android.saveCredentials(id, pw);" +
-                    "       });" +
-                    "   }" +
+            // [정보 수집 모드] 캡처 로직은 이전과 동일 (tempSaveCredentials에서 처리함)
+            String captureScript = "javascript:(function() {" +
+                    "   var idField = document.querySelector('#user_id');" +
+                    "   var pwField = document.querySelector('#user_pwd');" +
+                    "   var update = function() {" +
+                    "       window.Android.tempSaveCredentials(idField ? idField.value : '', pwField ? pwField.value : '');" +
+                    "   };" +
+                    "   if(idField) idField.addEventListener('blur', update);" +
+                    "   if(pwField) pwField.addEventListener('blur', update);" +
+                    "   var btns = document.querySelectorAll('#loginStart, #loginBtn');" +
+                    "   btns.forEach(function(btn) { btn.addEventListener('click', update); });" +
                     "})();";
-            view.loadUrl(injectCaptureScript);
+            view.loadUrl(captureScript);
         }
     }
 
     private void handleHomePage(WebView view) {
         CookieManager.getInstance().flush(); // 세션 유지
+
+        if (!tempEmail.isEmpty() && !tempPw.isEmpty()) {
+            SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            prefs.edit()
+                    .putString(KEY_ID, tempId)
+                    .putString(KEY_EMAIL, tempEmail)
+                    .putString(KEY_PW, tempPw)
+                    .apply();
+
+            Toast.makeText(MainActivity.this, "자동 로그인 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show();
+            tempId = ""; tempEmail = ""; tempPw = ""; // 초기화
+        }
+
         String profileScript = "javascript:(function() {" +
                 "setTimeout(function() {" +
                 "   var nameSpan = document.querySelector('.user_name .name');" +
@@ -236,10 +316,18 @@ public class MainActivity extends AppCompatActivity {
                 "var style = document.createElement('style');" +
                 "style.type = 'text/css';" +
                 "style.innerHTML = '" +
+                "   #wrap { background: rgba(241, 243, 249, 1) !important; }" +
                 "   #rest_area { display: none !important; }" +
                 "   .d-table-fixed { width: 100% !important; }" +
                 "   .widget_cover { height: 40vh !important; }" +
                 "   .btn_attendance { height: 10vh !important; font-size: xxx-large !important; border: 1px solid black !important; }" +
+                "   .task_area, .task-left, .task-right {  display: none !important; }" +
+                "   .widget_cover.attendance .widget_header::after {  display: none !important; }" +
+                "   .widget_title { font-size: xxx-large !important; margin-top:1vh !important; margin-bottom:2vh !important; }" +
+                "   .time_info { font-size: xxx-large !important; }" +
+                "   .attendance_state { font-size: xx-large !important; height: 3vh !important; width: 5vh !important; line-height: 3vh !important; border-radius: 3vh !important; text-align: center !important; }" +
+                "   .time { font-size: xxx-large !important; margin-top:1vh !important; margin-bottom:1vh !important; }" +
+                "   .copyright {  font-size: xxx-large !important; }" +
                 "   .form-bottom #btn_cancel { display: none !important; }" +
                 "   .form-bottom button:not(#btn_cancel) { width: 100% !important; height: 10vh !important; margin: 2vh !important; font-size: xxx-large !important; border: 1px solid black !important; }" +
                 "   .form-control { height: 10vh !important; font-size: xxx-large !important; width: 100% !important; min-width: 100% !important; }" +
@@ -286,7 +374,7 @@ public class MainActivity extends AppCompatActivity {
         Glide.with(this).asBitmap().load(glideUrl).circleCrop().into(new CustomTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                int halfWidth = Math.max(resource.getWidth() / 2, 1);
+                int halfWidth = Math.max(resource.getWidth() / 2 , 1);
                 int halfHeight = Math.max(resource.getHeight() / 2, 1);
                 Bitmap scaledBitmap = Bitmap.createScaledBitmap(resource, halfWidth, halfHeight, true);
                 Drawable resizedDrawable = new BitmapDrawable(getResources(), scaledBitmap);
@@ -297,8 +385,10 @@ public class MainActivity extends AppCompatActivity {
                     getSupportActionBar().setLogo(resizedDrawable);
                 }
             }
+
             @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {}
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+            }
         });
     }
 
@@ -340,7 +430,7 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_settings) {
             new AlertDialog.Builder(this)
                     .setTitle("로그아웃")
-                    .setMessage("저장된 정보를 지우고 로그아웃하시겠습니까?")
+                    .setMessage("계정정보를 지우고 앱을 종료 하시겠습니까?")
                     .setPositiveButton("예", (dialog, which) -> performLogout())
                     .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
                     .show();

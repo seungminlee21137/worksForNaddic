@@ -1,4 +1,4 @@
-package com.naddic.worksfornaddic;
+package com.naver.worksforApp;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.naddic.worksfornaddic.databinding.FragmentSecondBinding;
+import com.naver.worksforApp.databinding.FragmentSecondBinding;
 
 public class SecondFragment extends Fragment {
 

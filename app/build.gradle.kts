@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace = "com.naddic.worksfornaddic"
+    namespace = "com.naver.worksforApp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.naddic.worksfornaddic"
-        minSdk = 24
+        applicationId = "com.naver.worksforApp"
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -35,7 +35,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
